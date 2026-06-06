@@ -56,9 +56,15 @@ async function initStore() {
   if (process.env.DATABASE_URL) {
     try {
       const { Pool } = require('pg');
+      // DigitalOcean Managed Postgres requires TLS (its DATABASE_URL carries
+      // `sslmode=require`). Accept DO's CA without bundling the cert file. Plain
+      // local Postgres (no sslmode) connects without TLS.
+      const url = process.env.DATABASE_URL || '';
+      const needsSsl = /sslmode=(require|verify)/i.test(url) || /[?&]ssl=true/i.test(url);
       const pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
+        connectionString: url,
         connectionTimeoutMillis: 5000,
+        ...(needsSsl ? { ssl: { rejectUnauthorized: false } } : {}),
       });
       await pool.query(`
         CREATE TABLE IF NOT EXISTS todos (
