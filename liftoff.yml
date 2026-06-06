@@ -1,0 +1,32 @@
+# Single-service config. Liftoff auto-detects the root Dockerfile, but this makes
+# the intent explicit. The app listens on $PORT, so it adapts to whatever port
+# Liftoff assigns — `port` below is just the declared HTTP port.
+version: "1.0"
+
+service:
+  name: todo
+  type: app
+  region: nyc3
+
+build:
+  strategy: dockerfile
+  dockerfile_path: Dockerfile
+
+runtime:
+  instance_size: apps-s-1vcpu-0.5gb
+  replicas: 1
+  port: 8080
+
+env:
+  NODE_ENV: production
+
+healthcheck:
+  path: /health
+
+# Optional persistence: uncomment to provision a managed Postgres, or just add a
+# Postgres node on the canvas and draw an edge to this service. Either injects
+# DATABASE_URL, which the app uses automatically (otherwise it runs in-memory).
+# database:
+#   enabled: true
+#   engine: postgres
+#   version: "15"
